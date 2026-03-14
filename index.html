@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👾 바이브 코딩 레트로 게임 모음</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --neon-blue: #00F5FF;
+    --neon-red: #E94560;
+    --neon-green: #00FF41;
+    --neon-purple: #B44FDB;
+    --neon-yellow: #FFD700;
+    --bg: #020210;
+    --card-bg: #0d0d1a;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent, transparent 2px,
+      rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none; z-index: 9999;
+  }
+
+  /* ── Stars background ── */
+  #stars { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+  /* ── Header ── */
+  header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 60px 20px 20px;
+  }
+
+  .pixel-title {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: clamp(1rem, 4vw, 2rem);
+    color: var(--neon-yellow);
+    text-shadow:
+      0 0 10px var(--neon-yellow),
+      0 0 30px var(--neon-yellow),
+      0 0 60px rgba(255,215,0,0.4);
+    letter-spacing: 2px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow-pulse {
+    from { text-shadow: 0 0 10px var(--neon-yellow), 0 0 30px var(--neon-yellow); }
+    to   { text-shadow: 0 0 20px var(--neon-yellow), 0 0 60px var(--neon-yellow), 0 0 100px rgba(255,215,0,0.3); }
+  }
+
+  .subtitle {
+    color: #aaa;
+    font-size: 0.85rem;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,245,255,0.1);
+    border: 1px solid var(--neon-blue);
+    color: var(--neon-blue);
+    font-size: 0.72rem;
+    letter-spacing: 2px;
+    padding: 4px 16px;
+    border-radius: 2px;
+    margin: 4px;
+  }
+
+  /* ── Marquee ── */
+  .marquee-wrap {
+    position: relative; z-index: 10;
+    overflow: hidden;
+    border-top: 1px solid #1a1a3a;
+    border-bottom: 1px solid #1a1a3a;
+    padding: 8px 0;
+    margin: 20px 0;
+    background: rgba(0,0,0,0.3);
+  }
+  .marquee-inner {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 18s linear infinite;
+    color: var(--neon-green);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+  }
+  @keyframes marquee { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+  /* ── Game grid ── */
+  .section-title {
+    position: relative; z-index: 10;
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: #666;
+    margin: 10px 0 30px;
+    text-transform: uppercase;
+  }
+  .section-title span {
+    padding: 0 12px;
+    background: var(--bg);
+    position: relative;
+  }
+  .section-title::before {
+    content: '';
+    position: absolute; top: 50%; left: 10%; right: 10%;
+    height: 1px; background: #1a1a3a;
+  }
+
+  .grid {
+    position: relative; z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid #1a1a3a;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 0 30px var(--card-glow, #00F5FF44);
+  }
+  .card::before {
+    content: '';
+    position: absolute; top:0; left:0; right:0; height:2px;
+    background: var(--card-accent, var(--neon-blue));
+    box-shadow: 0 0 12px var(--card-accent, var(--neon-blue));
+  }
+
+  .card-preview {
+    height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 5rem;
+    background: radial-gradient(ellipse at center,
+      var(--card-glow-bg, rgba(0,245,255,0.06)) 0%, transparent 70%);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-preview .emoji {
+    filter: drop-shadow(0 0 20px var(--card-accent, var(--neon-blue)));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+  }
+  .card-preview .pixel-deco {
+    position: absolute; font-size: 0.6rem; letter-spacing: 1px;
+    color: var(--card-accent, var(--neon-blue)); opacity: 0.3;
+  }
+  .deco-tl { top:10px; left:12px; }
+  .deco-br { bottom:10px; right:12px; }
+
+  .card-body { padding: 18px 20px 20px; }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #fff;
+  }
+  .stars {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+  }
+
+  .card-desc {
+    font-size: 0.78rem;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .card-tags {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 16px;
+  }
+  .tag {
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid #222;
+    color: #777;
+  }
+
+  .play-btn {
+    display: block; width: 100%;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--card-accent, var(--neon-blue));
+    color: var(--card-accent, var(--neon-blue));
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    text-decoration: none;
+  }
+  .play-btn:hover {
+    background: var(--card-accent, var(--neon-blue));
+    color: #000;
+    box-shadow: 0 0 20px var(--card-accent, var(--neon-blue));
+  }
+
+  /* ── Footer ── */
+  footer {
+    position: relative; z-index:10;
+    text-align: center;
+    padding: 30px 20px;
+    border-top: 1px solid #1a1a3a;
+    color: #444;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    line-height: 2;
+  }
+  footer a {
+    color: var(--neon-blue);
+    text-decoration: none;
+  }
+  footer a:hover { text-shadow: 0 0 8px var(--neon-blue); }
+
+  /* Responsive */
+  @media(max-width:480px){
+    .pixel-title { font-size:0.85rem; }
+    .grid { padding: 0 14px 40px; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<header>
+  <div class="pixel-title">👾 바이브 코딩<br>레트로 게임 모음</div>
+  <p class="subtitle">코딩 몰라도 OK! AI 프롬프트로 만든 게임들</p>
+  <span class="badge">HTML / JS ONLY</span>
+  <span class="badge">NO INSTALL</span>
+  <span class="badge">FREE TO PLAY</span>
+</header>
+
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    ★ PLAY IN BROWSER &nbsp;&nbsp;★ NO INSTALL NEEDED &nbsp;&nbsp;★ MADE WITH AI PROMPTS &nbsp;&nbsp;
+    ★ 뱀 게임 &nbsp;&nbsp;★ 벽돌깨기 &nbsp;&nbsp;★ 테트리스 &nbsp;&nbsp;★ 팩맨 &nbsp;&nbsp;★ 스페이스 슈터 &nbsp;&nbsp;
+    ★ VIBE CODING &nbsp;&nbsp;★ 코딩 없이 게임 제작 &nbsp;&nbsp;
+  </div>
+</div>
+
+<p class="section-title"><span>CHOOSE YOUR GAME</span></p>
+
+<div class="grid">
+
+  <!-- Snake -->
+  <a class="card" href="snake.html"
+     style="--card-accent:#00FF41; --card-glow:#00FF4144; --card-glow-bg:rgba(0,255,65,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">SNAKE.EXE</span>
+      <span class="emoji">🐍</span>
+      <span class="pixel-deco deco-br">1976</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#00FF41">뱀 게임 · Snake</div>
+        <div class="stars">⭐☆☆☆☆</div>
+      </div>
+      <p class="card-desc">방향키로 뱀을 조종해 먹이를 먹을수록 길어지는 클래식! 레벨이 오를수록 속도가 빨라집니다.</p>
+      <div class="card-tags">
+        <span class="tag">입문</span>
+        <span class="tag">방향키</span>
+        <span class="tag">레벨 시스템</span>
+        <span class="tag">사운드</span>
+      </div>
+      <span class="play-btn">▶ 플레이하기</span>
+    </div>
+  </a>
+
+  <!-- Breakout -->
+  <a class="card" href="breakout.html"
+     style="--card-accent:#E94560; --card-glow:#E9456044; --card-glow-bg:rgba(233,69,96,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">BREAKOUT.EXE</span>
+      <span class="emoji">🧱</span>
+      <span class="pixel-deco deco-br">1976</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#E94560">벽돌깨기 · Breakout</div>
+        <div class="stars">⭐⭐☆☆☆</div>
+      </div>
+      <p class="card-desc">공을 튕겨 벽돌을 모두 파괴하세요! 아이템을 먹으면 패들이 넓어지거나 공이 느려집니다.</p>
+      <div class="card-tags">
+        <span class="tag">초급</span>
+        <span class="tag">마우스 / 키보드</span>
+        <span class="tag">파워업</span>
+        <span class="tag">멀티 스테이지</span>
+      </div>
+      <span class="play-btn">▶ 플레이하기</span>
+    </div>
+  </a>
+
+  <!-- Tetris -->
+  <a class="card" href="tetris.html"
+     style="--card-accent:#B44FDB; --card-glow:#B44FDB44; --card-glow-bg:rgba(180,79,219,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">TETRIS.EXE</span>
+      <span class="emoji">🟦</span>
+      <span class="pixel-deco deco-br">1984</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#B44FDB">테트리스 · Tetris</div>
+        <div class="stars">⭐⭐⭐☆☆</div>
+      </div>
+      <p class="card-desc">7가지 블록으로 줄을 완성하세요! 고스트 피스, 홀드 기능, 레벨 시스템을 모두 갖춘 풀버전.</p>
+      <div class="card-tags">
+        <span class="tag">중급</span>
+        <span class="tag">고스트 피스</span>
+        <span class="tag">홀드 (C키)</span>
+        <span class="tag">레벨업</span>
+      </div>
+      <span class="play-btn">▶ 플레이하기</span>
+    </div>
+  </a>
+
+  <!-- Pac-Man -->
+  <a class="card" href="pacman.html"
+     style="--card-accent:#FFD700; --card-glow:#FFD70044; --card-glow-bg:rgba(255,215,0,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">PACMAN.EXE</span>
+      <span class="emoji">🟡</span>
+      <span class="pixel-deco deco-br">1980</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#FFD700">팩맨 · Pac-Man</div>
+        <div class="stars">⭐⭐⭐⭐☆</div>
+      </div>
+      <p class="card-desc">미로를 돌며 점을 먹고 4마리 유령을 피하세요. Power Pellet으로 유령을 역으로 잡을 수 있어요!</p>
+      <div class="card-tags">
+        <span class="tag">고급</span>
+        <span class="tag">유령 AI</span>
+        <span class="tag">파워 펠렛</span>
+        <span class="tag">미로</span>
+      </div>
+      <span class="play-btn">▶ 플레이하기</span>
+    </div>
+  </a>
+
+  <!-- Space Shooter -->
+  <a class="card" href="space-shooter.html"
+     style="--card-accent:#00F5FF; --card-glow:#00F5FF44; --card-glow-bg:rgba(0,245,255,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">SHOOTER.EXE</span>
+      <span class="emoji">🚀</span>
+      <span class="pixel-deco deco-br">1978</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#00F5FF">스페이스 슈터</div>
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <p class="card-desc">외계인 편대를 격파하고 5웨이브마다 등장하는 보스를 처치하세요. 탄막 패턴과 파워업 아이템 포함!</p>
+      <div class="card-tags">
+        <span class="tag">고난이도</span>
+        <span class="tag">보스전</span>
+        <span class="tag">파워업</span>
+        <span class="tag">탄막</span>
+      </div>
+      <span class="play-btn">▶ 플레이하기</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- Footer -->
+<footer>
+  <p>📖 이 게임들은 <strong style="color:#fff">«코딩 몰라도 OK! 바이브 코딩으로 레트로 게임 만들기»</strong> 전자책의 예제입니다</p>
+  <p style="margin-top:8px;">
+    AI 프롬프트만으로 만든 HTML/JavaScript 게임 &nbsp;|&nbsp;
+    <a href="https://github.com/y-ahn/retro-games" target="_blank">GitHub ↗</a>
+  </p>
+  <p style="margin-top:8px; font-size:0.65rem; color:#333;">
+    INSERT COIN TO CONTINUE &nbsp;·&nbsp; © 2025 y-ahn
+  </p>
+</footer>
+
+<script>
+// ── Starfield canvas ──────────────────────────────
+const sc = document.getElementById('stars');
+const sctx = sc.getContext('2d');
+let W, H, stars = [];
+
+function resizeStars() {
+  W = sc.width = window.innerWidth;
+  H = sc.height = window.innerHeight;
+}
+
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * W, y: Math.random() * H,
+      r: Math.random() * 1.2 + 0.2,
+      spd: Math.random() * 0.4 + 0.05,
+      alpha: Math.random() * 0.5 + 0.2
+    });
+  }
+}
+
+function drawStars() {
+  sctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    s.y += s.spd;
+    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+    sctx.globalAlpha = s.alpha;
+    sctx.fillStyle = '#ffffff';
+    sctx.beginPath();
+    sctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    sctx.fill();
+  }
+  sctx.globalAlpha = 1;
+  requestAnimationFrame(drawStars);
+}
+
+resizeStars(); initStars(); drawStars();
+window.addEventListener('resize', () => { resizeStars(); initStars(); });
+
+// ── Pixel cursor trail ────────────────────────────
+const trail = [];
+window.addEventListener('mousemove', e => {
+  trail.push({ x: e.clientX, y: e.clientY, life: 8 });
+  if (trail.length > 12) trail.shift();
+});
+</script>
+</body>
+</html>

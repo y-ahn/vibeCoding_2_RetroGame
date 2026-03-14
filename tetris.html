@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🟦 테트리스 (Tetris)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;}
+  h1{font-size:1.8rem;letter-spacing:4px;color:#B44FDB;text-shadow:0 0 20px #B44FDB;margin-bottom:10px;}
+  #game-wrap{display:flex;gap:20px;align-items:flex-start;}
+  canvas{background:#000;border:2px solid #B44FDB;box-shadow:0 0 30px #B44FDB44;display:block;}
+  #side{width:120px;display:flex;flex-direction:column;gap:14px;}
+  .panel{border:1px solid #333;padding:10px;background:#0d0d1a;}
+  .panel-title{font-size:0.7rem;color:#888;letter-spacing:2px;margin-bottom:6px;}
+  .panel-val{font-size:1.3rem;color:#FFD700;font-weight:bold;}
+  #next-canvas{background:#000;border:1px solid #333;}
+  #overlay{
+    position:absolute;background:rgba(0,0,0,0.9);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    border:2px solid #B44FDB;box-shadow:0 0 30px #B44FDBaa;padding:36px 50px;text-align:center;
+  }
+  #overlay h2{font-size:1.8rem;color:#B44FDB;text-shadow:0 0 10px #B44FDB;}
+  #overlay p{color:#ccc;font-size:0.85rem;}
+  button{padding:11px 28px;background:transparent;border:2px solid #B44FDB;color:#B44FDB;font-family:'Courier New',monospace;font-size:0.95rem;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+  button:hover{background:#B44FDB;color:#000;box-shadow:0 0 20px #B44FDB;}
+  #back-btn{margin-top:14px;padding:8px 22px;background:transparent;border:1px solid #444;color:#666;font-family:'Courier New',monospace;font-size:0.82rem;cursor:pointer;letter-spacing:1px;}
+  #back-btn:hover{border-color:#B44FDB;color:#B44FDB;}
+  #mobile-btns{display:none;margin-top:12px;flex-direction:column;align-items:center;gap:6px;}
+  @media(max-width:600px){#mobile-btns{display:flex;}}
+  .mb-row{display:flex;gap:6px;}
+  .mb{width:50px;height:50px;background:transparent;border:2px solid #B44FDB;color:#B44FDB;font-size:1.3rem;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;}
+  .mb:active{background:#B44FDB;color:#000;}
+</style>
+</head>
+<body>
+<h1>🟦 TETRIS</h1>
+<div id="game-wrap">
+  <div id="side">
+    <div class="panel"><div class="panel-title">SCORE</div><div class="panel-val" id="score">0</div></div>
+    <div class="panel"><div class="panel-title">LEVEL</div><div class="panel-val" id="level">1</div></div>
+    <div class="panel"><div class="panel-title">LINES</div><div class="panel-val" id="lines">0</div></div>
+    <div class="panel"><div class="panel-title">NEXT</div><canvas id="next-canvas" width="100" height="100"></canvas></div>
+    <div class="panel"><div class="panel-title">HOLD (C)</div><canvas id="hold-canvas" width="100" height="100"></canvas></div>
+  </div>
+  <div style="position:relative;display:inline-block;">
+    <canvas id="c" width="300" height="600"></canvas>
+    <div id="overlay">
+      <h2 id="ov-title">TETRIS</h2>
+      <p>← → 이동 &nbsp;|&nbsp; ↑ 회전</p>
+      <p>↓ 빠르게 &nbsp;|&nbsp; Space 즉시 드롭</p>
+      <p>C / Shift = 홀드</p>
+      <button onclick="startGame()">▶ 시작하기</button>
+    </div>
+  </div>
+</div>
+<div id="mobile-btns">
+  <div class="mb-row"><div class="mb" ontouchstart="rotatePiece()">↻</div></div>
+  <div class="mb-row">
+    <div class="mb" ontouchstart="moveLeft()">◀</div>
+    <div class="mb" ontouchstart="hardDrop()">▼</div>
+    <div class="mb" ontouchstart="moveRight()">▶</div>
+  </div>
+  <div class="mb-row"><div class="mb" ontouchstart="holdPiece()">H</div></div>
+</div>
+<button id="back-btn" onclick="location.href='index.html'">← 게임 목록으로</button>
+
+<script>
+const C=document.getElementById('c'),ctx=C.getContext('2d');
+const NC=document.getElementById('next-canvas'),nctx=NC.getContext('2d');
+const HC=document.getElementById('hold-canvas'),hctx=HC.getContext('2d');
+const COLS=10,ROWS=20,CS=30;
+
+const PIECES={
+  I:{shape:[[1,1,1,1]],color:'#00F5FF',shadow:'#00F5FF'},
+  O:{shape:[[1,1],[1,1]],color:'#FFD700',shadow:'#FFD700'},
+  T:{shape:[[0,1,0],[1,1,1]],color:'#B44FDB',shadow:'#B44FDB'},
+  S:{shape:[[0,1,1],[1,1,0]],color:'#00FF41',shadow:'#00FF41'},
+  Z:{shape:[[1,1,0],[0,1,1]],color:'#E94560',shadow:'#E94560'},
+  J:{shape:[[1,0,0],[1,1,1]],color:'#4169E1',shadow:'#4169E1'},
+  L:{shape:[[0,0,1],[1,1,1]],color:'#FF8C00',shadow:'#FF8C00'},
+};
+const PKEYS=Object.keys(PIECES);
+
+let board,cur,next,hold,canHold,score,level,lines,running=false,dropTimer,dropInterval;
+
+const ac=new(window.AudioContext||window.webkitAudioContext)();
+function beep(f,d,t='square',v=0.08){
+  const o=ac.createOscillator(),g=ac.createGain();
+  o.type=t;o.frequency.value=f;
+  g.gain.setValueAtTime(v,ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d);
+}
+
+function randPiece(){
+  const k=PKEYS[Math.floor(Math.random()*PKEYS.length)];
+  const p=PIECES[k];
+  return{shape:p.shape.map(r=>[...r]),color:p.color,shadow:p.shadow,x:Math.floor(COLS/2)-Math.ceil(p.shape[0].length/2),y:0};
+}
+
+function rotate(shape){
+  return shape[0].map((_,i)=>shape.map(r=>r[i]).reverse());
+}
+
+function valid(shape,ox,oy){
+  for(let r=0;r<shape.length;r++)
+    for(let c=0;c<shape[r].length;c++)
+      if(shape[r][c]){
+        const nx=ox+c,ny=oy+r;
+        if(nx<0||nx>=COLS||ny>=ROWS)return false;
+        if(ny>=0&&board[ny][nx])return false;
+      }
+  return true;
+}
+
+function lock(){
+  for(let r=0;r<cur.shape.length;r++)
+    for(let c=0;c<cur.shape[r].length;c++)
+      if(cur.shape[r][c]&&cur.y+r>=0) board[cur.y+r][cur.x+c]=cur.color;
+  clearLines();
+  cur=next; next=randPiece(); canHold=true;
+  if(!valid(cur.shape,cur.x,cur.y)){ gameOver(); }
+  drawNext();
+}
+
+function clearLines(){
+  let cleared=0;
+  for(let r=ROWS-1;r>=0;r--){
+    if(board[r].every(c=>c)){
+      board.splice(r,1);
+      board.unshift(Array(COLS).fill(0));
+      cleared++;r++;
+    }
+  }
+  if(cleared){
+    const pts=[0,100,300,500,800];
+    score+=pts[cleared]*level;lines+=cleared;
+    const newLvl=Math.floor(lines/10)+1;
+    if(newLvl>level){level=newLvl;clearInterval(dropTimer);dropInterval=Math.max(80,800-level*70);dropTimer=setInterval(dropAuto,dropInterval);}
+    beep(cleared>=4?1047:880,0.15,'sine',0.15);
+    updateHUD();
+  }
+}
+
+function dropAuto(){if(!running)return;if(valid(cur.shape,cur.x,cur.y+1))cur.y++;else lock();draw();}
+function moveLeft(){if(valid(cur.shape,cur.x-1,cur.y))cur.x--;draw();}
+function moveRight(){if(valid(cur.shape,cur.x+1,cur.y))cur.x++;draw();}
+function rotatePiece(){const r=rotate(cur.shape);if(valid(r,cur.x,cur.y)){cur.shape=r;beep(330,.04);}draw();}
+function hardDrop(){while(valid(cur.shape,cur.x,cur.y+1))cur.y++;lock();beep(220,.06);draw();}
+function holdPiece(){
+  if(!canHold)return;canHold=false;
+  if(!hold){hold=randPiece();hold.shape=PIECES[Object.keys(PIECES).find(k=>PIECES[k].color===cur.color)]?.shape.map(r=>[...r])||cur.shape;
+    hold.color=cur.color;hold.shadow=cur.shadow;cur=next;next=randPiece();}
+  else{const tmp={shape:hold.shape,color:hold.color,shadow:hold.shadow};
+    hold={shape:cur.shape,color:cur.color,shadow:cur.shadow};
+    cur={...tmp,x:Math.floor(COLS/2)-Math.ceil(tmp.shape[0].length/2),y:0};}
+  drawHold();drawNext();draw();
+}
+
+function ghostY(){let gy=cur.y;while(valid(cur.shape,cur.x,gy+1))gy++;return gy;}
+
+function startGame(){
+  document.getElementById('overlay').style.display='none';
+  board=Array.from({length:ROWS},()=>Array(COLS).fill(0));
+  score=0;level=1;lines=0;hold=null;canHold=true;
+  cur=randPiece();next=randPiece();
+  running=true;dropInterval=800;
+  updateHUD();drawNext();drawHold();
+  clearInterval(dropTimer);
+  dropTimer=setInterval(dropAuto,dropInterval);
+  draw();
+}
+
+function gameOver(){
+  running=false;clearInterval(dropTimer);
+  beep(200,.5,'sawtooth',.2);
+  document.getElementById('ov-title').textContent='GAME OVER';
+  document.getElementById('overlay').style.display='flex';
+}
+
+function updateHUD(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('level').textContent=level;
+  document.getElementById('lines').textContent=lines;
+}
+
+function drawMini(c,ctx,piece){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,c.width,c.height);
+  if(!piece)return;
+  const cs=20,ox=Math.floor((c.width-piece.shape[0].length*cs)/2),oy=Math.floor((c.height-piece.shape.length*cs)/2);
+  for(let r=0;r<piece.shape.length;r++)
+    for(let col=0;col<piece.shape[r].length;col++)
+      if(piece.shape[r][col]){
+        ctx.fillStyle=piece.color;ctx.shadowColor=piece.shadow;ctx.shadowBlur=6;
+        ctx.fillRect(ox+col*cs+1,oy+r*cs+1,cs-2,cs-2);ctx.shadowBlur=0;
+      }
+}
+function drawNext(){drawMini(NC,nctx,next);}
+function drawHold(){drawMini(HC,hctx,hold);}
+
+function draw(){
+  ctx.fillStyle='#000';ctx.fillRect(0,0,COLS*CS,ROWS*CS);
+  // grid
+  ctx.strokeStyle='#0d0d1a';ctx.lineWidth=0.5;
+  for(let c=0;c<=COLS;c++){ctx.beginPath();ctx.moveTo(c*CS,0);ctx.lineTo(c*CS,ROWS*CS);ctx.stroke();}
+  for(let r=0;r<=ROWS;r++){ctx.beginPath();ctx.moveTo(0,r*CS);ctx.lineTo(COLS*CS,r*CS);ctx.stroke();}
+  // board
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(board[r][c]){
+    ctx.fillStyle=board[r][c];ctx.shadowColor=board[r][c];ctx.shadowBlur=4;
+    ctx.fillRect(c*CS+1,r*CS+1,CS-2,CS-2);ctx.shadowBlur=0;
+  }
+  if(!running)return;
+  // ghost
+  const gy=ghostY();
+  for(let r=0;r<cur.shape.length;r++)for(let c=0;c<cur.shape[r].length;c++)if(cur.shape[r][c]){
+    ctx.fillStyle='rgba(255,255,255,0.12)';
+    ctx.fillRect((cur.x+c)*CS+1,(gy+r)*CS+1,CS-2,CS-2);
+  }
+  // current
+  for(let r=0;r<cur.shape.length;r++)for(let c=0;c<cur.shape[r].length;c++)if(cur.shape[r][c]){
+    ctx.fillStyle=cur.color;ctx.shadowColor=cur.shadow;ctx.shadowBlur=8;
+    ctx.fillRect((cur.x+c)*CS+1,(cur.y+r)*CS+1,CS-2,CS-2);ctx.shadowBlur=0;
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(!running)return;
+  if(e.key==='ArrowLeft'){e.preventDefault();moveLeft();}
+  if(e.key==='ArrowRight'){e.preventDefault();moveRight();}
+  if(e.key==='ArrowUp'){e.preventDefault();rotatePiece();}
+  if(e.key==='ArrowDown'){e.preventDefault();if(valid(cur.shape,cur.x,cur.y+1)){cur.y++;draw();}}
+  if(e.key===' '){e.preventDefault();hardDrop();}
+  if(e.key==='c'||e.key==='C'||e.key==='Shift'){holdPiece();}
+});
+</script>
+</body>
+</html>
