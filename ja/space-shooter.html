@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🚀 스페이스 슈터 (Space Shooter)</title>
+<title>🚀 スペースシューター (Space Shooter)</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#020210;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;}
@@ -29,19 +29,19 @@
 </style>
 </head>
 <body>
-<h1>🚀 SPACE SHOOTER</h1>
+<h1>🚀 スペースシューター</h1>
 <div id="hud">
-  <span>SCORE <b id="score">0</b></span>
-  <span>LIVES <b id="lives">❤❤❤</b></span>
+  <span>スコア <b id="score">0</b></span>
+  <span>ライフ <b id="lives">❤❤❤</b></span>
   <span>WAVE <b id="wave">1</b></span>
 </div>
 <div style="position:relative;display:inline-block">
   <canvas id="c" width="480" height="560"></canvas>
   <div id="overlay">
     <h2 id="ov-title">SPACE SHOOTER</h2>
-    <p id="ov-sub">← → 이동 &nbsp;|&nbsp; Space 발사 &nbsp;|&nbsp; Z 폭탄</p>
-    <p>외계인을 모두 격추하세요!</p>
-    <button id="startBtn" onclick="startGame()">▶ 시작하기</button>
+    <p id="ov-sub">← → 移動 &nbsp;|&nbsp; Space 射撃 &nbsp;|&nbsp; Z 爆弾</p>
+    <p>エイリアンをすべて撃墜しよう！</p>
+    <button id="startBtn" onclick="startGame()">▶ スタート</button>
   </div>
 </div>
 <div id="mobile-btns">
@@ -262,8 +262,8 @@ function loop(){
 function gameOver(){
   running=false;
   document.getElementById('ov-title').textContent='GAME OVER';
-  document.getElementById('ov-sub').innerHTML=`점수: <b style="color:#00F5FF">${score}</b> | WAVE: <b style="color:#FFD700">${wave}</b>`;
-  document.getElementById('startBtn').textContent='▶ 다시하기';
+  document.getElementById('ov-sub').innerHTML=`スコア: <b style="color:#00F5FF">${score}</b> | WAVE: <b style="color:#FFD700">${wave}</b>`;
+  document.getElementById('startBtn').textContent='▶ もう一度';
   document.getElementById('startBtn').onclick=startGame;
   document.getElementById('overlay').style.display='flex';
 }

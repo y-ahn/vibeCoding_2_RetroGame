@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🐍 뱀 게임 (Snake)</title>
+<title>🐍 スネークゲーム (Snake)</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -78,19 +78,19 @@
 </style>
 </head>
 <body>
-<h1>🐍 SNAKE</h1>
+<h1>🐍 スネーク</h1>
 <div id="scoreboard">
-  <span>SCORE <b id="score">0</b></span>
-  <span>BEST <b id="best">0</b></span>
-  <span>LEVEL <b id="level">1</b></span>
+  <span>スコア <b id="score">0</b></span>
+  <span>ベスト <b id="best">0</b></span>
+  <span>レベル <b id="level">1</b></span>
 </div>
 <div style="position:relative; display:inline-block;">
   <canvas id="c" width="400" height="400"></canvas>
   <div id="overlay">
     <h2 id="ov-title">SNAKE</h2>
-    <p id="ov-msg">방향키 또는 WASD 로 조작</p>
-    <p>먹이를 먹을수록 뱀이 길어집니다</p>
-    <button id="ov-btn" onclick="startGame()">▶ 시작하기</button>
+    <p id="ov-msg">矢印キーまたはWASDで操作</p>
+    <p>餌を食べるほどヘビが長くなります</p>
+    <button id="ov-btn" onclick="startGame()">▶ スタート</button>
   </div>
 </div>
 <div id="mobile-controls">
@@ -168,8 +168,8 @@ function gameOver() {
   if (score > best) best = score;
   document.getElementById('ov-title').textContent = 'GAME OVER';
   document.getElementById('ov-title').style.color = '#E94560';
-  document.getElementById('ov-msg').innerHTML = `점수: <b style="color:#FFD700">${score}</b> | 최고: <b style="color:#00FF41">${best}</b>`;
-  document.getElementById('ov-btn').textContent = '▶ 다시하기';
+  document.getElementById('ov-msg').innerHTML = `スコア: <b style="color:#FFD700">${score}</b> | ベスト: <b style="color:#00FF41">${best}</b>`;
+  document.getElementById('ov-btn').textContent = '▶ もう一度';
   document.getElementById('overlay').style.display = 'flex';
   updateHUD();
 }

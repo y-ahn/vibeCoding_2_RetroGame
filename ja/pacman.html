@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🟡 팩맨 (Pac-Man)</title>
+<title>🟡 パックマン (Pac-Man)</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
   body{background:#050510;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;color:#fff;}
@@ -25,19 +25,19 @@
 </style>
 </head>
 <body>
-<h1>🟡 PAC-MAN</h1>
+<h1>🟡 パックマン</h1>
 <div id="hud">
-  <span>SCORE <b id="score">0</b></span>
-  <span>LIVES <b id="lives">3</b></span>
-  <span>LEVEL <b id="level">1</b></span>
+  <span>スコア <b id="score">0</b></span>
+  <span>ライフ <b id="lives">3</b></span>
+  <span>レベル <b id="level">1</b></span>
 </div>
 <div style="position:relative;display:inline-block">
   <canvas id="c"></canvas>
   <div id="overlay">
     <h2 id="ov-title">PAC-MAN</h2>
-    <p id="ov-sub">방향키로 팩맨을 조종하세요</p>
-    <p>큰 점을 먹으면 유령을 잡을 수 있어요!</p>
-    <button id="startBtn" onclick="startGame()">▶ 시작하기</button>
+    <p id="ov-sub">矢印キーでパックマンを操作してください</p>
+    <p>パワーペレットを食べるとゴーストを食べられます！</p>
+    <button id="startBtn" onclick="startGame()">▶ スタート</button>
   </div>
 </div>
 <button id="back-btn" onclick="location.href='index.html'">← ゲーム一覧へ</button>
@@ -185,8 +185,8 @@ function tick(){
         lives--;updateHUD();beep(150,.5,'sawtooth',.2);
         if(lives<=0){running=false;clearInterval(gameLoopId);
           setTimeout(()=>{document.getElementById('ov-title').textContent='GAME OVER';
-            document.getElementById('ov-sub').innerHTML=`점수: <b style="color:#FFD700">${score}</b>`;
-            document.getElementById('startBtn').textContent='▶ 다시하기';
+            document.getElementById('ov-sub').innerHTML=`スコア: <b style="color:#FFD700">${score}</b>`;
+            document.getElementById('startBtn').textContent='▶ もう一度';
             document.getElementById('overlay').style.display='flex';},500);
           return;}
         setTimeout(()=>{pacman.x=10;pacman.y=16;pacman.dx=0;pacman.dy=0;},1000);
