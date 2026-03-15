@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐍 뱀 게임 (Snake)</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    font-family: 'Courier New', monospace;
+    color: #00FF41;
+  }
+  h1 { font-size: 2rem; letter-spacing: 4px; text-shadow: 0 0 20px #00FF41; margin-bottom: 10px; }
+  #scoreboard {
+    display: flex; gap: 40px; margin-bottom: 14px; font-size: 1rem; letter-spacing: 2px;
+  }
+  #scoreboard span { color: #aaa; }
+  #scoreboard b { color: #00FF41; }
+  canvas {
+    border: 2px solid #00FF41;
+    box-shadow: 0 0 30px #00FF41aa, inset 0 0 30px #001a0088;
+    background: #000;
+    display: block;
+  }
+  #overlay {
+    position: absolute;
+    background: rgba(0,0,0,0.85);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px;
+    border: 2px solid #00FF41;
+    box-shadow: 0 0 30px #00FF41aa;
+    padding: 40px 60px;
+    text-align: center;
+  }
+  #overlay h2 { font-size: 2rem; color: #E94560; text-shadow: 0 0 10px #E94560; }
+  #overlay p { color: #ccc; font-size: 0.9rem; }
+  #overlay b { color: #FFD700; }
+  button {
+    margin-top: 8px;
+    padding: 12px 32px;
+    background: transparent;
+    border: 2px solid #00FF41;
+    color: #00FF41;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  button:hover { background: #00FF41; color: #000; box-shadow: 0 0 20px #00FF41; }
+  #mobile-controls {
+    display: none;
+    margin-top: 16px;
+    gap: 8px;
+  }
+  @media (max-width: 600px) { #mobile-controls { display: grid; grid-template-columns: repeat(3,52px); grid-template-rows: repeat(2,52px); } }
+  .mbtн {
+    width: 52px; height: 52px;
+    background: transparent; border: 2px solid #00FF41;
+    color: #00FF41; font-size: 1.4rem;
+    cursor: pointer; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mbtн:active { background: #00FF41; color: #000; }
+  #back-btn {
+    margin-top: 18px;
+    padding: 8px 24px;
+    background: transparent; border: 1px solid #444;
+    color: #666; font-family: 'Courier New', monospace;
+    font-size: 0.85rem; cursor: pointer; letter-spacing: 1px;
+  }
+  #back-btn:hover { border-color: #00FF41; color: #00FF41; }
+</style>
+</head>
+<body>
+<h1>🐍 SNAKE</h1>
+<div id="scoreboard">
+  <span>SCORE <b id="score">0</b></span>
+  <span>BEST <b id="best">0</b></span>
+  <span>LEVEL <b id="level">1</b></span>
+</div>
+<div style="position:relative; display:inline-block;">
+  <canvas id="c" width="400" height="400"></canvas>
+  <div id="overlay">
+    <h2 id="ov-title">SNAKE</h2>
+    <p id="ov-msg">방향키 또는 WASD 로 조작</p>
+    <p>먹이를 먹을수록 뱀이 길어집니다</p>
+    <button id="ov-btn" onclick="startGame()">▶ 시작하기</button>
+  </div>
+</div>
+<div id="mobile-controls">
+  <div></div>
+  <div class="mbtн" ontouchstart="setDir(0,-1)">▲</div>
+  <div></div>
+  <div class="mbtн" ontouchstart="setDir(-1,0)">◀</div>
+  <div class="mbtн" ontouchstart="setDir(0,1)">▼</div>
+  <div class="mbtн" ontouchstart="setDir(1,0)">▶</div>
+</div>
+<button id="back-btn" onclick="location.href='index.html'">← ゲーム一覧へ</button>
+
+<script>
+const C = document.getElementById('c');
+const ctx = C.getContext('2d');
+const CELL = 20, COLS = 20, ROWS = 20;
+let snake, dir, nextDir, food, score, best = 0, level, loop, running = false;
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let ac;
+function beep(freq, dur, type='square', vol=0.15) {
+  if (!ac) ac = new AudioCtx();
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur);
+}
+
+function setDir(x, y) {
+  if (x === -snake.dx || y === -snake.dy) return;
+  nextDir = {dx: x, dy: y};
+}
+
+function placeFood() {
+  let pos;
+  do { pos = {x: Math.floor(Math.random()*COLS), y: Math.floor(Math.random()*ROWS)}; }
+  while (snake.body.some(s => s.x===pos.x && s.y===pos.y));
+  food = pos;
+}
+
+function startGame() {
+  document.getElementById('overlay').style.display = 'none';
+  snake = { body: [{x:10,y:10},{x:9,y:10},{x:8,y:10}], dx:1, dy:0 };
+  nextDir = {dx:1, dy:0};
+  score = 0; level = 1;
+  updateHUD();
+  placeFood();
+  running = true;
+  clearInterval(loop);
+  loop = setInterval(tick, 150);
+}
+
+function tick() {
+  dir = nextDir;
+  snake.dx = dir.dx; snake.dy = dir.dy;
+  const head = {x: snake.body[0].x + snake.dx, y: snake.body[0].y + snake.dy};
+  if (head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.body.some(s=>s.x===head.x&&s.y===head.y)) {
+    gameOver(); return;
+  }
+  snake.body.unshift(head);
+  if (head.x===food.x && head.y===food.y) {
+    score += 10 * level;
+    if (score >= level * 100) { level++; clearInterval(loop); loop = setInterval(tick, Math.max(60, 150 - level*15)); }
+    beep(880, 0.08);
+    placeFood();
+  } else { snake.body.pop(); }
+  updateHUD(); draw();
+}
+
+function gameOver() {
+  clearInterval(loop); running = false;
+  beep(200, 0.3, 'sawtooth', 0.2); beep(150, 0.5, 'sawtooth', 0.2);
+  if (score > best) best = score;
+  document.getElementById('ov-title').textContent = 'GAME OVER';
+  document.getElementById('ov-title').style.color = '#E94560';
+  document.getElementById('ov-msg').innerHTML = `점수: <b style="color:#FFD700">${score}</b> | 최고: <b style="color:#00FF41">${best}</b>`;
+  document.getElementById('ov-btn').textContent = '▶ 다시하기';
+  document.getElementById('overlay').style.display = 'flex';
+  updateHUD();
+}
+
+function updateHUD() {
+  document.getElementById('score').textContent = score;
+  document.getElementById('best').textContent = best;
+  document.getElementById('level').textContent = level;
+}
+
+function draw() {
+  ctx.fillStyle = '#000'; ctx.fillRect(0,0,400,400);
+  // grid
+  ctx.strokeStyle = '#0a1a0a'; ctx.lineWidth = 0.5;
+  for(let i=0;i<=COLS;i++) { ctx.beginPath(); ctx.moveTo(i*CELL,0); ctx.lineTo(i*CELL,400); ctx.stroke(); }
+  for(let i=0;i<=ROWS;i++) { ctx.beginPath(); ctx.moveTo(0,i*CELL); ctx.lineTo(400,i*CELL); ctx.stroke(); }
+  // food
+  ctx.fillStyle = '#E94560';
+  ctx.shadowColor = '#E94560'; ctx.shadowBlur = 12;
+  ctx.fillRect(food.x*CELL+2, food.y*CELL+2, CELL-4, CELL-4);
+  ctx.shadowBlur = 0;
+  // snake
+  snake.body.forEach((s, i) => {
+    const ratio = 1 - i/snake.body.length * 0.5;
+    ctx.fillStyle = i===0 ? '#00FF41' : `rgba(0,${Math.floor(200*ratio+55)},${Math.floor(65*ratio)},1)`;
+    if (i===0) { ctx.shadowColor = '#00FF41'; ctx.shadowBlur = 10; }
+    ctx.fillRect(s.x*CELL+1, s.y*CELL+1, CELL-2, CELL-2);
+    ctx.shadowBlur = 0;
+  });
+}
+
+document.addEventListener('keydown', e => {
+  const map = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
+               w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
+  if (map[e.key]) { e.preventDefault(); setDir(...map[e.key]); }
+});
+</script>
+</body>
+</html>

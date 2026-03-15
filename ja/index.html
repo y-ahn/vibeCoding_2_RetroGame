@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👾 バイブコーディング レトロゲーム集</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-blue: #00F5FF;
+    --neon-red: #E94560;
+    --neon-green: #00FF41;
+    --neon-purple: #B44FDB;
+    --neon-yellow: #FFD700;
+    --bg: #020210;
+    --card-bg: #0d0d1a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    min-height: 100vh;
+    font-family: 'Noto Sans JP', 'Courier New', monospace;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none; z-index: 9999;
+  }
+  #stars { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+  /* ── lang switcher ── */
+  .lang-bar {
+    position: relative; z-index: 10;
+    display: flex; justify-content: flex-end;
+    padding: 12px 28px 0;
+    gap: 8px;
+  }
+  .lang-btn {
+    font-size: 11px; letter-spacing: 1px;
+    padding: 5px 14px; border-radius: 2px; cursor: pointer;
+    text-decoration: none; font-family: 'Courier New', monospace;
+    transition: all .2s;
+  }
+  .lang-btn.active { background: var(--neon-yellow); color: #000; font-weight: 700; }
+  .lang-btn.inactive { background: transparent; border: 1px solid #444; color: #666; }
+  .lang-btn.inactive:hover { border-color: var(--neon-yellow); color: var(--neon-yellow); }
+
+  header {
+    position: relative; z-index: 10;
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  .pixel-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.75rem, 3vw, 1.4rem);
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow), 0 0 30px var(--neon-yellow);
+    letter-spacing: 2px; line-height: 1.8; margin-bottom: 12px;
+    animation: glow-pulse 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow-pulse {
+    from { text-shadow: 0 0 10px var(--neon-yellow), 0 0 30px var(--neon-yellow); }
+    to   { text-shadow: 0 0 20px var(--neon-yellow), 0 0 60px var(--neon-yellow), 0 0 100px rgba(255,215,0,0.3); }
+  }
+  .subtitle { color: #aaa; font-size: 0.85rem; letter-spacing: 3px; margin-bottom: 8px; }
+  .badge {
+    display: inline-block;
+    background: rgba(0,245,255,0.1); border: 1px solid var(--neon-blue);
+    color: var(--neon-blue); font-size: 0.72rem; letter-spacing: 2px;
+    padding: 4px 16px; border-radius: 2px; margin: 4px;
+  }
+
+  .marquee-wrap {
+    position: relative; z-index: 10; overflow: hidden;
+    border-top: 1px solid #1a1a3a; border-bottom: 1px solid #1a1a3a;
+    padding: 8px 0; margin: 20px 0; background: rgba(0,0,0,0.3);
+  }
+  .marquee-inner {
+    display: inline-block; white-space: nowrap;
+    animation: marquee 20s linear infinite;
+    color: var(--neon-green); font-size: 0.8rem; letter-spacing: 3px;
+  }
+  @keyframes marquee { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+  .section-title {
+    position: relative; z-index: 10; text-align: center;
+    font-size: 0.75rem; letter-spacing: 4px; color: #666;
+    margin: 10px 0 30px; text-transform: uppercase;
+  }
+  .section-title span { padding: 0 12px; background: var(--bg); position: relative; }
+  .section-title::before {
+    content: ''; position: absolute; top: 50%; left: 10%; right: 10%;
+    height: 1px; background: #1a1a3a;
+  }
+
+  .grid {
+    position: relative; z-index: 10;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px; max-width: 1100px; margin: 0 auto; padding: 0 24px 60px;
+  }
+  .card {
+    background: var(--card-bg); border: 1px solid #1a1a3a; border-radius: 4px;
+    overflow: hidden; position: relative; transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer; text-decoration: none; display: block;
+  }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 0 30px var(--card-glow, #00F5FF44); }
+  .card::before {
+    content: ''; position: absolute; top:0; left:0; right:0; height:2px;
+    background: var(--card-accent, var(--neon-blue));
+    box-shadow: 0 0 12px var(--card-accent, var(--neon-blue));
+  }
+  .card-preview {
+    height: 140px; display: flex; align-items: center; justify-content: center;
+    font-size: 5rem;
+    background: radial-gradient(ellipse at center, var(--card-glow-bg, rgba(0,245,255,0.06)) 0%, transparent 70%);
+    position: relative; overflow: hidden;
+  }
+  .card-preview .emoji { filter: drop-shadow(0 0 20px var(--card-accent, var(--neon-blue))); animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .card-preview .pixel-deco { position: absolute; font-size: 0.6rem; letter-spacing: 1px; color: var(--card-accent, var(--neon-blue)); opacity: 0.3; }
+  .deco-tl { top:10px; left:12px; } .deco-br { bottom:10px; right:12px; }
+  .card-body { padding: 18px 20px 20px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .card-title { font-size: 1.05rem; font-weight: bold; letter-spacing: 1px; color: #fff; }
+  .stars { font-size: 0.75rem; letter-spacing: 1px; }
+  .card-desc { font-size: 0.78rem; color: #888; line-height: 1.7; margin-bottom: 14px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .tag { font-size: 0.65rem; letter-spacing: 1px; padding: 3px 10px; border-radius: 2px; background: rgba(255,255,255,0.04); border: 1px solid #222; color: #777; }
+  .play-btn {
+    display: block; width: 100%; padding: 11px; background: transparent;
+    border: 1px solid var(--card-accent, var(--neon-blue));
+    color: var(--card-accent, var(--neon-blue));
+    font-family: 'Noto Sans JP', monospace; font-size: 0.8rem;
+    letter-spacing: 2px; cursor: pointer; transition: all 0.2s; text-align: center; text-decoration: none;
+  }
+  .play-btn:hover { background: var(--card-accent, var(--neon-blue)); color: #000; box-shadow: 0 0 20px var(--card-accent, var(--neon-blue)); }
+
+  footer {
+    position: relative; z-index:10; text-align: center;
+    padding: 30px 20px; border-top: 1px solid #1a1a3a;
+    color: #444; font-size: 0.75rem; letter-spacing: 1px; line-height: 2.2;
+  }
+  footer a { color: var(--neon-blue); text-decoration: none; }
+  footer a:hover { text-shadow: 0 0 8px var(--neon-blue); }
+  @media(max-width:480px){ .pixel-title { font-size:0.75rem; } .grid { padding: 0 14px 40px; gap: 16px; } }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<!-- Language switcher -->
+<div class="lang-bar">
+  <a href="../ko/index.html" class="lang-btn inactive">🇰🇷 한국어</a>
+  <a href="index.html"       class="lang-btn active">🇯🇵 日本語</a>
+</div>
+
+<header>
+  <div class="pixel-title">👾 バイブコーディング<br>レトロゲーム集</div>
+  <p class="subtitle">コーディング不要！AIプロンプトだけで作ったゲームたち</p>
+  <span class="badge">HTML / JS ONLY</span>
+  <span class="badge">インストール不要</span>
+  <span class="badge">無料プレイ</span>
+</header>
+
+<div class="marquee-wrap">
+  <div class="marquee-inner">
+    ★ PLAY IN BROWSER &nbsp;&nbsp;★ NO INSTALL NEEDED &nbsp;&nbsp;★ MADE WITH AI PROMPTS &nbsp;&nbsp;
+    ★ スネーク &nbsp;&nbsp;★ ブロック崩し &nbsp;&nbsp;★ テトリス &nbsp;&nbsp;★ パックマン &nbsp;&nbsp;★ スペースシューター &nbsp;&nbsp;
+    ★ バイブコーディング &nbsp;&nbsp;★ コーディング不要でゲーム制作 &nbsp;&nbsp;
+  </div>
+</div>
+
+<p class="section-title"><span>CHOOSE YOUR GAME</span></p>
+
+<div class="grid">
+
+  <a class="card" href="snake.html"
+     style="--card-accent:#00FF41; --card-glow:#00FF4144; --card-glow-bg:rgba(0,255,65,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">SNAKE.EXE</span>
+      <span class="emoji">🐍</span>
+      <span class="pixel-deco deco-br">1976</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#00FF41">スネークゲーム</div>
+        <div class="stars">⭐☆☆☆☆</div>
+      </div>
+      <p class="card-desc">矢印キーでヘビを操って餌を食べるほど長くなるクラシック！レベルが上がるほどスピードも増します。</p>
+      <div class="card-tags">
+        <span class="tag">入門</span>
+        <span class="tag">矢印キー</span>
+        <span class="tag">レベルシステム</span>
+        <span class="tag">サウンド</span>
+      </div>
+      <span class="play-btn">▶ プレイする</span>
+    </div>
+  </a>
+
+  <a class="card" href="breakout.html"
+     style="--card-accent:#E94560; --card-glow:#E9456044; --card-glow-bg:rgba(233,69,96,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">BREAKOUT.EXE</span>
+      <span class="emoji">🧱</span>
+      <span class="pixel-deco deco-br">1976</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#E94560">ブロック崩し</div>
+        <div class="stars">⭐⭐☆☆☆</div>
+      </div>
+      <p class="card-desc">ボールを弾かせてブロックをすべて破壊しましょう！アイテムでパドルが広がったり、ボールが遅くなったりします。</p>
+      <div class="card-tags">
+        <span class="tag">初級</span>
+        <span class="tag">マウス / キーボード</span>
+        <span class="tag">パワーアップ</span>
+        <span class="tag">マルチステージ</span>
+      </div>
+      <span class="play-btn">▶ プレイする</span>
+    </div>
+  </a>
+
+  <a class="card" href="tetris.html"
+     style="--card-accent:#B44FDB; --card-glow:#B44FDB44; --card-glow-bg:rgba(180,79,219,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">TETRIS.EXE</span>
+      <span class="emoji">🟦</span>
+      <span class="pixel-deco deco-br">1984</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#B44FDB">テトリス</div>
+        <div class="stars">⭐⭐⭐☆☆</div>
+      </div>
+      <p class="card-desc">7種類のブロックで横一列を完成させましょう！ゴーストピース、ホールド機能、レベルシステムを備えたフルバージョン。</p>
+      <div class="card-tags">
+        <span class="tag">中級</span>
+        <span class="tag">ゴーストピース</span>
+        <span class="tag">ホールド (Cキー)</span>
+        <span class="tag">レベルアップ</span>
+      </div>
+      <span class="play-btn">▶ プレイする</span>
+    </div>
+  </a>
+
+  <a class="card" href="pacman.html"
+     style="--card-accent:#FFD700; --card-glow:#FFD70044; --card-glow-bg:rgba(255,215,0,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">PACMAN.EXE</span>
+      <span class="emoji">🟡</span>
+      <span class="pixel-deco deco-br">1980</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#FFD700">パックマン</div>
+        <div class="stars">⭐⭐⭐⭐☆</div>
+      </div>
+      <p class="card-desc">迷路を進んでドットを食べながら4体のゴーストを避けましょう。パワーペレットでゴーストを逆に食べられます！</p>
+      <div class="card-tags">
+        <span class="tag">上級</span>
+        <span class="tag">ゴーストAI</span>
+        <span class="tag">パワーペレット</span>
+        <span class="tag">迷路</span>
+      </div>
+      <span class="play-btn">▶ プレイする</span>
+    </div>
+  </a>
+
+  <a class="card" href="space-shooter.html"
+     style="--card-accent:#00F5FF; --card-glow:#00F5FF44; --card-glow-bg:rgba(0,245,255,0.06);">
+    <div class="card-preview">
+      <span class="pixel-deco deco-tl">SHOOTER.EXE</span>
+      <span class="emoji">🚀</span>
+      <span class="pixel-deco deco-br">1978</span>
+    </div>
+    <div class="card-body">
+      <div class="card-header">
+        <div class="card-title" style="color:#00F5FF">スペースシューター</div>
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+      </div>
+      <p class="card-desc">エイリアン編隊を撃墜して、5ウェーブごとに登場するボスを倒しましょう。弾幕パターンとパワーアップアイテムも充実！</p>
+      <div class="card-tags">
+        <span class="tag">高難度</span>
+        <span class="tag">ボス戦</span>
+        <span class="tag">パワーアップ</span>
+        <span class="tag">弾幕</span>
+      </div>
+      <span class="play-btn">▶ プレイする</span>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  <p>📖 これらのゲームは <strong style="color:#fff">「コーディングが分からなくてもOK！バイブコーディングでレトロゲームを作ろう！」</strong> の電子書籍サンプルです</p>
+  <p style="margin-top:8px;">
+    AIプロンプトだけで作ったHTML/JavaScriptゲーム &nbsp;|&nbsp;
+    <a href="https://github.com/y-ahn/vibeCoding_2_RetroGame" target="_blank">GitHub ↗</a>
+  </p>
+  <p style="margin-top:8px; font-size:0.65rem; color:#333;">
+    INSERT COIN TO CONTINUE &nbsp;·&nbsp; © 2025 アン・ヨンジュン / rentify
+  </p>
+</footer>
+
+<script>
+const sc = document.getElementById('stars');
+const sctx = sc.getContext('2d');
+let W, H, stars = [];
+function resizeStars() { W = sc.width = window.innerWidth; H = sc.height = window.innerHeight; }
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 120; i++)
+    stars.push({ x: Math.random()*W, y: Math.random()*H, r: Math.random()*1.2+0.2, spd: Math.random()*0.4+0.05, alpha: Math.random()*0.5+0.2 });
+}
+function drawStars() {
+  sctx.clearRect(0, 0, W, H);
+  for (const s of stars) {
+    s.y += s.spd; if (s.y > H) { s.y = 0; s.x = Math.random()*W; }
+    sctx.globalAlpha = s.alpha; sctx.fillStyle = '#ffffff';
+    sctx.beginPath(); sctx.arc(s.x, s.y, s.r, 0, Math.PI*2); sctx.fill();
+  }
+  sctx.globalAlpha = 1; requestAnimationFrame(drawStars);
+}
+resizeStars(); initStars(); drawStars();
+window.addEventListener('resize', () => { resizeStars(); initStars(); });
+</script>
+</body>
+</html>

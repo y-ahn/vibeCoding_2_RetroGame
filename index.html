@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👾 Vibe Coding Retro Games</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#020210; min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Courier New', monospace; color:#fff;
+  }
+  .logo { font-size:5rem; margin-bottom:20px; animation:float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  h1 {
+    font-size:clamp(1rem,3vw,1.6rem); letter-spacing:3px; text-align:center;
+    color:#FFD700; text-shadow:0 0 20px #FFD700; margin-bottom:8px; line-height:1.6;
+  }
+  .sub { font-size:0.8rem; letter-spacing:2px; color:#555; margin-bottom:50px; text-align:center; }
+  .lang-grid { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
+  .lang-card {
+    width:220px; padding:32px 20px;
+    background:#0d0d1a; border:1px solid #1a1a3a; border-radius:4px;
+    text-decoration:none; text-align:center;
+    transition:transform .2s, box-shadow .2s;
+    position:relative; overflow:hidden;
+  }
+  .lang-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  }
+  .lang-card.ko::before { background:#00F5FF; box-shadow:0 0 10px #00F5FF; }
+  .lang-card.ja::before { background:#E94560; box-shadow:0 0 10px #E94560; }
+  .lang-card:hover { transform:translateY(-6px); }
+  .lang-card.ko:hover { box-shadow:0 0 30px rgba(0,245,255,0.25); }
+  .lang-card.ja:hover { box-shadow:0 0 30px rgba(233,69,96,0.25); }
+  .lang-flag { font-size:2.8rem; margin-bottom:12px; display:block; }
+  .lang-name { font-size:1.1rem; font-weight:700; letter-spacing:2px; margin-bottom:6px; }
+  .lang-card.ko .lang-name { color:#00F5FF; }
+  .lang-card.ja .lang-name { color:#E94560; }
+  .lang-desc { font-size:0.72rem; color:#555; letter-spacing:1px; line-height:1.6; margin-bottom:18px; }
+  .lang-btn {
+    display:block; padding:9px; font-family:'Courier New',monospace;
+    font-size:0.75rem; letter-spacing:2px; border-radius:2px;
+  }
+  .lang-card.ko .lang-btn { background:rgba(0,245,255,0.08); border:1px solid #00F5FF; color:#00F5FF; }
+  .lang-card.ja .lang-btn { background:rgba(233,69,96,0.08); border:1px solid #E94560; color:#E94560; }
+  .footer { margin-top:50px; font-size:0.65rem; letter-spacing:2px; color:#333; text-align:center; line-height:2; }
+  .footer a { color:#444; text-decoration:none; }
+  .footer a:hover { color:#FFD700; }
+  /* stars */
+  canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; }
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+
+<div class="logo">👾</div>
+<h1>VIBE CODING<br>RETRO GAMES</h1>
+<p class="sub">바이브코딩 시리즈 2 &nbsp;·&nbsp; バイブコーディング シリーズ 2</p>
+
+<div class="lang-grid">
+  <a href="ko/index.html" class="lang-card ko">
+    <span class="lang-flag">🇰🇷</span>
+    <div class="lang-name">한국어</div>
+    <div class="lang-desc">코딩 몰라도 OK!<br>바이브 코딩으로<br>레트로 게임 만들기</div>
+    <span class="lang-btn">▶ 한국어로 플레이</span>
+  </a>
+  <a href="ja/index.html" class="lang-card ja">
+    <span class="lang-flag">🇯🇵</span>
+    <div class="lang-name">日本語</div>
+    <div class="lang-desc">コーディング不要！<br>バイブコーディングで<br>レトロゲームを作ろう！</div>
+    <span class="lang-btn">▶ 日本語でプレイ</span>
+  </a>
+</div>
+
+<div class="footer">
+  <p>published by <strong style="color:#FFD700">rentify</strong> &nbsp;·&nbsp; <a href="https://github.com/y-ahn/vibeCoding_2_RetroGame" target="_blank">GitHub ↗</a></p>
+  <p style="margin-top:4px;">© 2025 アン・ヨンジュン / 안영준</p>
+</div>
+
+<script>
+const c=document.getElementById('stars'),ctx=c.getContext('2d');
+let stars=[];
+function resize(){c.width=innerWidth;c.height=innerHeight;}
+function init(){stars=[];for(let i=0;i<100;i++)stars.push({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.2+.2,s:Math.random()*.4+.05,a:Math.random()*.5+.2});}
+function draw(){ctx.clearRect(0,0,c.width,c.height);stars.forEach(s=>{s.y+=s.s;if(s.y>c.height){s.y=0;s.x=Math.random()*c.width;}ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;requestAnimationFrame(draw);}
+resize();init();draw();window.addEventListener('resize',()=>{resize();init();});
+</script>
+</body>
+</html>
